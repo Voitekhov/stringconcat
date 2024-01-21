@@ -1,34 +1,100 @@
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 
 plugins {
-	id("org.springframework.boot") version "2.2.1.BUILD-SNAPSHOT"
-	id("io.spring.dependency-management") version "1.0.8.RELEASE"
-	kotlin("jvm") version "1.3.50"
-	kotlin("plugin.spring") version "1.3.50"
-	id("org.jetbrains.kotlin.plugin.jpa") version "1.3.50" apply false
+	kotlin("jvm") version Versions.kotlin
+	id(Plugins.gradleVersions) version Versions.gradleVersions
+	id(Plugins.detekt) version Versions.detekt
+	jacoco
+	id(Plugins.springBoot) version Versions.springBoot
+	id(Plugins.springDependencyManagement) version Versions.springDependencyManagement
+	kotlin(Plugins.kotlinSpring) version Versions.kotlin
+	id(Plugins.kotlinJpa) version Versions.kotlin apply false
 }
 
-allprojects {
-	group = "com.stringconcat"
-	version = "0.0.1-SNAPSHOT"
-
+allprojects{
 	repositories {
 		mavenCentral()
+		gradlePluginPortal()
 		jcenter()
-		maven { url = uri("https://repo.spring.io/milestone") }
-		maven { url = uri("https://repo.spring.io/snapshot") }
+	}
+}
+
+
+buildscript {
+	dependencies {
+		classpath(Libs.kotlinStdlibJdk8)
+		classpath(Libs.kotlinReflect)
+	}
+}
+
+subprojects {
+
+	apply {
+		plugin("kotlin")
+		plugin(Plugins.gradleVersions)
+		plugin(Plugins.detekt)
+		plugin("jacoco")
 	}
 
 	tasks.withType<KotlinCompile> {
 		kotlinOptions {
 			freeCompilerArgs = listOf("-Xjsr305=strict")
-			jvmTarget = "1.8"
+			jvmTarget = "11"
 		}
 	}
 
-}
+	detekt {
+		allRules = false
+		buildUponDefaultConfig = true
+		config = files(rootDir.resolve("detekt/detekt-config.yml"))
+		input = files(
+			io.gitlab.arturbosch.detekt.extensions.DetektExtension.Companion.DEFAULT_SRC_DIR_KOTLIN,
+			"src/test/kotlin",
+		)
 
-java.sourceCompatibility = JavaVersion.VERSION_1_8
+		tasks.withType<io.gitlab.arturbosch.detekt.Detekt>().configureEach {
+			reports {
+				xml.enabled = true
+				html.enabled = true
+				txt.enabled = true
+			}
+		}
+
+		reports {
+			html.enabled = true
+		}
+
+		dependencies {
+			detektPlugins("${Plugins.detektFormatting}:${Versions.detekt}")
+		}
+	}
+
+
+	jacoco {
+		toolVersion = "0.8.9"
+
+	}
+
+	tasks.jacocoTestCoverageVerification {
+		violationRules {
+			rule {
+				limit {
+					minimum = "0.5".toBigDecimal()
+				}
+			}
+		}
+	}
+
+	tasks.jacocoTestReport {
+		dependsOn(tasks.test)
+		finalizedBy(tasks.jacocoTestCoverageVerification)
+	}
+
+	tasks.test {
+		useJUnitPlatform()
+		finalizedBy(tasks.jacocoTestReport)
+	}
+}
 
 val developmentOnly by configurations.creating
 configurations {
@@ -38,16 +104,15 @@ configurations {
 }
 
 
-
 dependencies {
 	// spring modules
-	implementation("org.springframework.boot:spring-boot-starter-webflux")
-	implementation("org.springframework.boot:spring-boot-starter-data-jpa")
-	implementation("org.springframework.boot:spring-boot-starter-data-rest")
+	implementation(Libs.springBootWebfluxStarter)
+	implementation(Libs.springBootStarterDataJpa)
+	implementation(Libs.springBootStarterRest)
 
 	// kotlin
-	implementation("org.jetbrains.kotlin:kotlin-reflect")
-	implementation("org.jetbrains.kotlin:kotlin-stdlib-jdk8")
+	implementation(Libs.kotlinReflect)
+	implementation(Libs.kotlinStdlibJdk8)
 
 	implementation(project(":presentation"))
 	implementation(project(":persistence"))
@@ -57,20 +122,16 @@ dependencies {
 	implementation(project(":avatarsDicebear"))
 
 	// dev tools
-	developmentOnly("org.springframework.boot:spring-boot-devtools")
+	developmentOnly(Libs.springBootDevTools)
 
 	//persistance
-	implementation("org.postgresql:postgresql:42.3.4")
-	implementation("org.liquibase:liquibase-core:4.9.1")
+	implementation(Libs.postgresql)
+	implementation(Libs.liqubase)
 
 	// tests
-	testCompile("org.junit.jupiter:junit-jupiter-api:5.8.2")
-	testImplementation("org.springframework.boot:spring-boot-starter-test") {
+	testImplementation(Libs.junit5Api)
+	testImplementation(Libs.springBootTestStarter) {
 		exclude(group = "org.junit.vintage", module = "junit-vintage-engine")
 	}
-	testImplementation("io.projectreactor:reactor-test")
-}
-
-tasks.test {
-	useJUnitPlatform()
+	testImplementation(Libs.projectreactor)
 }

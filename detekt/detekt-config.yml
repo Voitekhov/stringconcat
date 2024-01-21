@@ -1,0 +1,50 @@
+comments:
+  UndocumentedPublicClass:
+    active: false
+  UndocumentedPublicFunction:
+    active: false
+  UndocumentedPublicProperty:
+    active: false
+
+style:
+  WildcardImport:
+    excludeImports: [ ]
+    active: true
+  FunctionOnlyReturningConstant:
+    active: false
+  UnnecessaryAbstractClass:
+    active: false
+  ReturnCount:
+    active: true
+    max: 5
+
+formatting:
+  active: true
+  android: false
+  autoCorrect: true
+  FinalNewline:
+    active: false
+  ImportOrdering:
+    active: false
+    autoCorrect: true
+    layout: '*,java.**,javax.**,kotlin.**,^'
+  NoEmptyFirstLineInMethodBlock:
+    active: false
+    autoCorrect: true
+
+naming:
+  InvalidPackageDeclaration:
+    active: false
+    excludes: [ '*.kts' ]
+  MatchingDeclarationName:
+    active: true
+
+performance:
+  SpreadOperator:
+    active: false
+
+complexity:
+  LongParameterList:
+    functionThreshold: 12
+    constructorThreshold: 12
+    ignoreDefaultParameters: true
