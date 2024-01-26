@@ -1,0 +1,17 @@
+services:
+  people-app:
+    image: ${IMAGE_NAME}
+    ports:
+      - "8080:8080"
+    depends_on:
+      - postgres-db
+  postgres-db:
+    image: postgres
+    environment:
+      POSTGRES_DB: people
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: 12345
+    ports:
+      - "5432:5432"
+
+  # reachable on 9092 from the host and on 29092 from inside docker compose

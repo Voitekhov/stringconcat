@@ -1,0 +1,61 @@
+name: deploy
+
+on:
+  push:
+    branches:
+      - main
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+
+      - name: Setup Gradle
+        uses: gradle/gradle-build-action@v2
+
+      - name: Login to YC
+        id: login-cr
+        uses: yc-actions/yc-cr-login@v1
+        with:
+          yc-sa-json-credentials: ${{ secrets.YC_SA_JSON_CREDENTIALS }}
+
+      - name: Build docker image
+        run: | 
+          sh ./scripts/build-image.sh
+
+      - name: Push docker image
+        run: |
+          sh ./scripts/push-image.sh
+
+      - name: Start docker container
+        env:
+          GIT_COMMIT: ${{ github.sha }}
+          BRANCH_NAME: ${{ github.ref_name }}
+          REPOSITORY: ${{ secrets.YA_CR_REPOSITORY }}
+          REGISTRY: ${{ secrets.YA_CR_REGISTRY }}
+          YA_AUTH_TOKEN: ${{ secrets.YA_AUTH_TOKEN }}
+        uses: appleboy/ssh-action@v1.0.1
+        with:
+          envs: GIT_COMMIT,BRANCH_NAME,REPOSITORY,REGISTRY,YA_AUTH_TOKEN
+          host: ${{ secrets.YA_VM_HOST }}
+          port: 22
+          username: ${{ secrets.YA_VM_USERNAME }}
+          key: ${{ secrets.YA_VM_KEY }}
+          passphrase: ${{ secrets.YA_VM_PASSPHRASE }}
+          script: |
+            export GIT_COMMIT=$GIT_COMMIT 
+            export BRANCH_NAME=$BRANCH_NAME 
+            export REPOSITORY=$REPOSITORY 
+            export REGISTRY=$REGISTRY 
+            export YA_AUTH_TOKEN=$YA_AUTH_TOKEN 
+            docker login --username oauth --password $YA_AUTH_TOKEN cr.yandex 
+            if [ "$(docker ps -a -q)" ]
+            then 
+              docker stop $(docker ps -a -q) 
+              docker rm $(docker ps -a -q) 
+              docker network rm app-net 
+            fi
+            docker network create --driver bridge app-net 
+            docker run -d -p 5432:5432 --name postgres-db --network app-net -e POSTGRES_DB=people -e POSTGRES_USER=postgres -e POSTGRES_PASSWORD=12345 postgres  
+            echo  cr.yandex/${REGISTRY}/${REPOSITORY}/people:${BRANCH_NAME}-${GIT_COMMIT}  
+            docker run -d -p 8080:8080 --name people-app --network app-net cr.yandex/${REGISTRY}/${REPOSITORY}/people:${BRANCH_NAME}-${GIT_COMMIT}
