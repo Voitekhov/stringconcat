@@ -19,8 +19,12 @@ jobs:
         with:
           yc-sa-json-credentials: ${{ secrets.YC_SA_JSON_CREDENTIALS }}
 
+      - name: Detekt check
+        run: |
+          ./gradlew detekt
+
       - name: Build docker image
-        run: | 
+        run: |
           sh ./scripts/build-image.sh
 
       - name: Push docker image
