@@ -12,22 +12,6 @@ plugins {
 }
 
 allprojects{
-	repositories {
-		mavenCentral()
-		gradlePluginPortal()
-		jcenter()
-	}
-}
-
-
-buildscript {
-	dependencies {
-		classpath(Libs.kotlinStdlibJdk8)
-		classpath(Libs.kotlinReflect)
-	}
-}
-
-subprojects {
 
 	apply {
 		plugin("kotlin")
@@ -36,20 +20,19 @@ subprojects {
 		plugin("jacoco")
 	}
 
-	tasks.withType<KotlinCompile> {
-		kotlinOptions {
-			freeCompilerArgs = listOf("-Xjsr305=strict")
-			jvmTarget = "11"
-		}
+	repositories {
+		mavenCentral()
+		gradlePluginPortal()
+		jcenter()
 	}
 
 	detekt {
 		allRules = false
 		buildUponDefaultConfig = true
-		config = files(rootDir.resolve("detekt/detekt-config.yml"))
+		config = files("$rootDir/detekt/detekt-config.yml")
 		input = files(
 			io.gitlab.arturbosch.detekt.extensions.DetektExtension.Companion.DEFAULT_SRC_DIR_KOTLIN,
-			"src/test/kotlin",
+			io.gitlab.arturbosch.detekt.extensions.DetektExtension.Companion.DEFAULT_TEST_SRC_DIR_KOTLIN,
 		)
 
 		tasks.withType<io.gitlab.arturbosch.detekt.Detekt>().configureEach {
@@ -93,6 +76,21 @@ subprojects {
 	tasks.test {
 		useJUnitPlatform()
 		finalizedBy(tasks.jacocoTestReport)
+	}
+
+	tasks.withType<KotlinCompile> {
+		kotlinOptions {
+			freeCompilerArgs = listOf("-Xjsr305=strict")
+			jvmTarget = "11"
+		}
+	}
+}
+
+
+buildscript {
+	dependencies {
+		classpath(Libs.kotlinStdlibJdk8)
+		classpath(Libs.kotlinReflect)
 	}
 }
 

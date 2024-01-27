@@ -8,10 +8,10 @@ import org.springframework.web.client.ResponseErrorHandler
 import org.springframework.web.client.RestTemplate
 import javax.inject.Named
 
-const val defaultQuote = "whoops, something went wrong"
-
 @Named
 class QuoteGardenProvider : QuotesProvider {
+
+    private val defaultQuote = "whoops, something went wrong"
 
     private val getRandomUrl = "https://api.forismatic.com/api/1.0/?method=getQuote&format=json"
 
@@ -30,11 +30,11 @@ class QuoteGardenProvider : QuotesProvider {
     }
 
     internal data class QuoteResponse(
-            val quoteText: String,
-            val quoteAuthor: String,
-            val senderName: String,
-            val senderLink: String,
-            val quoteLink: String
+        val quoteText: String,
+        val quoteAuthor: String,
+        val senderName: String,
+        val senderLink: String,
+        val quoteLink: String
     )
 }
 

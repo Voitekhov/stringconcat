@@ -15,15 +15,14 @@ import org.springframework.web.bind.annotation.PathVariable
 import org.springframework.web.bind.annotation.RequestMapping
 import org.springframework.web.bind.annotation.RequestMethod
 import org.springframework.web.bind.annotation.ResponseBody
-import java.io.*
 import java.net.URI
-import java.util.*
+import java.util.UUID
 
 @Controller
 class PeopleController(
-        val getPerson: GetPersonUseCase,
-        val createNew: CreateNewPersonUseCase,
-        val getMe: MeUseCase
+    val getPerson: GetPersonUseCase,
+    val createNew: CreateNewPersonUseCase,
+    val getMe: MeUseCase
 ) {
 
     @RequestMapping(value = ["/me"], method = [RequestMethod.GET])
@@ -41,10 +40,10 @@ class PeopleController(
         }
 
         val person = getPerson(idUUD)
-                ?: return ResponseEntity.badRequest().build()
+            ?: return ResponseEntity.badRequest().build()
 
         return ResponseEntity.ok(
-                renderDetailedView(PersonRespectfullViewModel(person))
+            renderDetailedView(PersonRespectfullViewModel(person))
         )
     }
 
@@ -55,16 +54,17 @@ class PeopleController(
     }
 
     @RequestMapping(
-            value = ["/generate"],
-            method = [RequestMethod.POST],
-            consumes = [MediaType.APPLICATION_FORM_URLENCODED_VALUE])
+        value = ["/generate"],
+        method = [RequestMethod.POST],
+        consumes = [MediaType.APPLICATION_FORM_URLENCODED_VALUE]
+    )
     @ResponseBody
-    fun create(personInput: PersonCreationSummary): ResponseEntity<String>{
+    fun create(personInput: PersonCreationSummary): ResponseEntity<String> {
         val generatedPerson = createNew(personInput)
 
         return ResponseEntity
-                .status(HttpStatus.FOUND)
-                .location(URI.create("/id/${generatedPerson.id}"))
-                .build()
+            .status(HttpStatus.FOUND)
+            .location(URI.create("/id/${generatedPerson.id}"))
+            .build()
     }
 }

@@ -31,6 +31,8 @@ formatting:
   NoEmptyFirstLineInMethodBlock:
     active: false
     autoCorrect: true
+  MultiLineIfElse:
+    active: false
 
 naming:
   InvalidPackageDeclaration:
@@ -48,3 +50,7 @@ complexity:
     functionThreshold: 12
     constructorThreshold: 12
     ignoreDefaultParameters: true
+
+exceptions:
+  SwallowedException:
+    active: false
